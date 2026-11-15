@@ -2,10 +2,10 @@
 #
 # Novus OS - QEMU runner
 #
-# Boots the UEFI image (out/NOVUS.EFI) under QEMU with OVMF firmware and
-# wires the guest serial port (COM1) to this terminal's stdio. The guest
-# gets two vCPUs for the AB dual-core SMP boot (README part 2): vCPU 0 is
-# the A core (BSP), vCPU 1 the B core (AP).
+# Boots the generated FAT ESP (out/esp.img) under QEMU with OVMF.  Unlike a
+# partial vvfat staging tree, this image includes the live SYSTEM.IMG, the
+# installer ESP.IMG, the signed TEST.NKM, applications and wallpapers.
+# Serial output (COM1) is connected to this terminal's stdio.
 #
 # Usage: scripts/run.sh [MEM]    (guest memory size, defaults to 4G)
 
@@ -16,21 +16,9 @@ MEM="${1:-4G}"
 # Always run from the repository root so relative paths are stable.
 cd "$(dirname "$0")/.."
 
-# Lay out the ESP and make sure a built image exists.
-mkdir -p esp/EFI/BOOT out
-if [ ! -f out/NOVUS.EFI ]; then
-    echo "out/NOVUS.EFI not found. Run 'make' first." >&2
+if [ ! -f out/esp.img ]; then
+    echo "out/esp.img not found. Run 'make esp' first." >&2
     exit 1
-fi
-cp out/NOVUS.EFI esp/EFI/BOOT/BOOTX64.EFI
-
-# Stage the wallpaper package on the ESP so the live desktop shows a photo
-# rather than a flat colour. The boot stage reads WPAPERS.PKG off the ESP
-# before ExitBootServices; without it the loader falls back to a solid fill.
-if [ -f out/wallpapers.pkg ]; then
-    cp out/wallpapers.pkg esp/WPAPERS.PKG
-else
-    echo "warning: out/wallpapers.pkg not built; desktop will be a flat colour" >&2
 fi
 
 # Copy pristine OVMF non-volatile variables on first use only, so boot
@@ -47,8 +35,9 @@ else
     DISPLAY_ARGS="-display none"
 fi
 
-# The vvfat drive is mounted read-write so the EFI application can
-# persist state on the ESP if it wants to.
+# Boot from the complete generated ESP. QEMU's per-drive snapshot mode
+# prevents the guest from modifying out/esp.img, preserving build results
+# across runs. Unlike fat:rw:esp, this has the same FAT layout as the ISO.
 #
 # Networking: QEMU's user-mode stack gives the guest DHCP (10.0.2.2), DNS
 # (10.0.2.3) and NAT to the real internet, which is what the NCSI probe in
@@ -60,6 +49,6 @@ NIC="${NOVUS_NIC:-e1000}"
 exec qemu-system-x86_64 -machine q35 -smp 2 -m "$MEM" \
     -drive if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE_4M.fd \
     -drive if=pflash,format=raw,file=out/OVMF_VARS.fd \
-    -drive format=raw,file=fat:rw:esp \
+    -drive if=ide,format=raw,file=out/esp.img,snapshot=on \
     -serial stdio -no-reboot $DISPLAY_ARGS \
     -netdev user,id=novusnet -device "$NIC",netdev=novusnet

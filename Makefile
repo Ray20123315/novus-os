@@ -494,11 +494,11 @@ out build:
 theme:
 	python3 tools/themegen/themegen.py
 
-run: all $(CPPCC_RUN_DEP) out/wallpapers.pkg
-	@if [ "$(CONFIG_USER_CPPCC)" = "y" ]; then \
-        mkdir -p esp; \
-        cp out/cppcc/hello.nuc esp/DEMO.NUC; \
-    fi
+# Build the complete live ESP before launching QEMU. The old vvfat staging
+# directory omitted SYSTEM.IMG, ESP.IMG and TEST.NKM, causing live-root boot
+# failures even though NOVUS.EFI and wallpapers were present.
+# `esp` is defined in tools/tools.mk, included after the kernel rules.
+run: esp
 	scripts/run.sh "$(MEM)"
 
 # Remove all build artifacts.
