@@ -311,6 +311,10 @@ class IsoFS:
         lba, size = self.trees.get(name_set, self.trees['primary'])
         result = None
         for comp in [c for c in path.split('/') if c]:
+            # Only directories may contain another path component. Otherwise
+            # file payload bytes could be mistaken for directory records.
+            if result is not None and not result[2]:
+                return None
             result = None
             for name, extent, length, is_dir in self.entries(lba, size, name_set):
                 if name == comp:
