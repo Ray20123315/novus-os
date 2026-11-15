@@ -13,6 +13,7 @@ import re
 import sys
 
 from novusimg import FatFS, IsoFS, NovusFS
+from live_esp_checks import check_live_esp_payloads
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -116,6 +117,8 @@ for name in ('esp-tpl.img', 'esp.img'):
           '%s: UEFI boot file missing' % name)
     check(fat.read_file('SYSTEM.IMG') is not None,
           '%s: SYSTEM.IMG missing' % name)
+    if name == 'esp.img':
+        check_live_esp_payloads(fat, check)
 
 # ---- ISO: primary aliases + Joliet original names ----------------------
 iso = load('novus-live.iso')
