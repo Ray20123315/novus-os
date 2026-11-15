@@ -1,4 +1,5 @@
 import struct
+import zlib
 import sys
 import tempfile
 import unittest
@@ -62,7 +63,7 @@ class SmokeTests(unittest.TestCase):
             valid = image.read_bytes()
             self.assertEqual(read_png(image), (1, 1, rgb))
 
-            for malformed in (valid[:-12], valid[:-12] + b"\\x00\\x00\\x00",
+            for malformed in (valid[:-12], valid[:-12] + b"\x00\x00\x00",
                               valid + b"junk"):
                 image.write_bytes(malformed)
                 with self.assertRaises(ValueError):
@@ -70,7 +71,7 @@ class SmokeTests(unittest.TestCase):
 
             payload = b"x"
             end = (struct.pack("!I", 1) + b"IEND" + payload +
-                   struct.pack("!I", __import__("zlib").crc32(b"IEND" + payload)))
+                   struct.pack("!I", zlib.crc32(b"IEND" + payload)))
             image.write_bytes(valid[:-12] + end)
             with self.assertRaises(ValueError):
                 read_png(image)
