@@ -53,6 +53,8 @@ def read_png(path: Path) -> tuple[int, int, bytes]:
     offset, width, height = 8, 0, 0
     compressed = bytearray()
     while offset < len(data):
+        if len(data) - offset < 12:
+            raise ValueError("truncated PNG chunk header")
         size = struct.unpack_from("!I", data, offset)[0]
         kind = data[offset + 4:offset + 8]
         payload = data[offset + 8:offset + 8 + size]
@@ -68,8 +70,12 @@ def read_png(path: Path) -> tuple[int, int, bytes]:
         elif kind == b"IDAT":
             compressed.extend(payload)
         elif kind == b"IEND":
+            if size != 0 or offset + 12 != len(data):
+                raise ValueError("invalid PNG end marker")
             break
         offset += size + 12
+    else:
+        raise ValueError("missing PNG end marker")
     rows = zlib.decompress(compressed)
     stride = width * 3 + 1
     if not width or not height or len(rows) != stride * height:
