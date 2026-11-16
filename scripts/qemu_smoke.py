@@ -365,6 +365,8 @@ def main() -> None:
     args = parser.parse_args()
     if not 0 <= args.tolerance <= 255 or not 0 <= args.max_changed < 1:
         parser.error("comparison thresholds outside their valid range")
+    if not 0 <= args.vnc_display <= 65535 - 5900:
+        parser.error("VNC display maps outside the TCP port range")
     qemu = shutil.which(args.qemu)
     if qemu is None:
         raise FileNotFoundError(f"QEMU executable not found: {args.qemu}")
