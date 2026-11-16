@@ -27,6 +27,8 @@ def u64(b, o):
 class NovusFS:
     def __init__(self, data):
         self.data = data
+        if len(data) < 32:
+            raise ValueError('truncated NovusFS superblock')
         if u32(data, 0) != NOVS_MAGIC:
             raise ValueError('not a NovusFS image')
         self.bs = u32(data, 8)
