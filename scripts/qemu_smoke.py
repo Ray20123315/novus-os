@@ -32,6 +32,8 @@ def check_log(text: str, required: tuple[str, ...] = ()) -> None:
 
 
 def write_png(path: Path, width: int, height: int, rgb: bytes) -> None:
+    if width <= 0 or height <= 0:
+        raise ValueError("invalid PNG dimensions")
     if len(rgb) != width * height * 3:
         raise ValueError("invalid RGB buffer")
 
