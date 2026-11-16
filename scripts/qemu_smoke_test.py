@@ -46,9 +46,9 @@ class SmokeTests(unittest.TestCase):
         init = struct.pack("!HH", 2, 1) + bytes(16) + struct.pack("!I", 0)
         for x, y, w, h in ((1, 0, 2, 1), (0, 1, 1, 1),
                            (0, 0, 65535, 65535)):
-            update = (b"\\0\\0\\0\\1" +
+            update = (b"\0\0\0\1" +
                       struct.pack("!HHHHi", x, y, w, h, 0))
-            wire = Wire(b"RFB 003.008\\n\\x01\\x01" + bytes(4) + init + update)
+            wire = Wire(b"RFB 003.008\n\x01\x01" + bytes(4) + init + update)
             with patch("qemu_smoke.socket.create_connection", return_value=wire):
                 rfb = Rfb(5901)
             with self.subTest(rectangle=(x, y, w, h)):
