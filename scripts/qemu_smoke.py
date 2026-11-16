@@ -154,11 +154,11 @@ class Rfb:
                     self.width, self.height = w, h
                     self.rgb = bytearray(w * h * 3)
                 elif encoding == 0:
+                    if x + w > self.width or y + h > self.height:
+                        raise RuntimeError("RFB rectangle outside framebuffer")
                     raw = receive(self.sock, w * h * 4)
                     rgb = bytearray(w * h * 3)
                     rgb[0::3], rgb[1::3], rgb[2::3] = raw[2::4], raw[1::4], raw[0::4]
-                    if x + w > self.width or y + h > self.height:
-                        raise RuntimeError("RFB rectangle outside framebuffer")
                     for row in range(h):
                         dest = ((y + row) * self.width + x) * 3
                         self.rgb[dest:dest + w * 3] = rgb[row * w * 3:(row + 1) * w * 3]
