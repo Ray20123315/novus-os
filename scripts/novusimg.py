@@ -332,4 +332,8 @@ class IsoFS:
         if found is None or found[2]:
             return None
         lba, size, _ = found
-        return self.data[lba * 2048:lba * 2048 + size]
+        start = lba * 2048
+        end = start + size
+        if end > len(self.data):
+            raise ValueError('ISO file extent outside image')
+        return self.data[start:end]
