@@ -30,6 +30,8 @@ class NovusFS:
         if u32(data, 0) != NOVS_MAGIC:
             raise ValueError('not a NovusFS image')
         self.bs = u32(data, 8)
+        if self.bs != BLOCK:
+            raise ValueError('unsupported NovusFS block size')
         self.itbl = u64(data, 24)
         self.root = 1
 
