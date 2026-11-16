@@ -186,6 +186,8 @@ class FatFS:
                     break
             if result is None:
                 return None
+            if result[2] and result[0] == 0:
+                raise ValueError('FAT subdirectory has no starting cluster')
             cluster = result[0]
         return result
 
