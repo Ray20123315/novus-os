@@ -25,7 +25,8 @@ with open(HEADER, 'r', encoding='utf-8') as fh:
 dirs_block = text.split('#define NOVUS_LAYOUT_DIRS(X)')[1].split(
     '/* Number of directory entries')[0]
 DIRS = re.findall(r'X\("([^"]+)",\s*"([^"]+)",\s*(\d+)\)', dirs_block)
-assert len(DIRS) == 77, 'layout directory count changed: %d' % len(DIRS)
+if len(DIRS) != 77:
+    raise ValueError('layout directory count changed: %d' % len(DIRS))
 
 meta_block = text.split('#define NOVUS_LAYOUT_META(X)')[1].split(
     '#define NOVUS_LAYOUT_MOUNTS(X)')[0]
