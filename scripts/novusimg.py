@@ -37,6 +37,8 @@ class NovusFS:
         return self.data[n * self.bs:(n + 1) * self.bs]
 
     def inode(self, ino):
+        if ino < 1:
+            raise ValueError('inode out of range')
         off = self.itbl * self.bs + (ino - 1) * 128
         raw = self.data[off:off + 128]
         if len(raw) < 100:
