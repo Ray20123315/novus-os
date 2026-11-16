@@ -86,13 +86,13 @@ class NovusFS:
             return []
         out = []
         for off in range(0, len(buf), 64):
-            if off + 8 > len(buf):
+            if off + 64 > len(buf):
                 break
             child, rec, nlen = struct.unpack_from('<IHH', buf, off)
             if child == 0:
                 continue
-            if rec < 8 or off + 8 + nlen > len(buf):
-                break
+            if rec != 64 or nlen > 56:
+                continue
             out.append((child, buf[off + 8:off + 8 + nlen].decode('utf-8', 'replace')))
         return out
 
