@@ -233,7 +233,8 @@ class IsoFS:
     def entries(self, lba, size, name_set='joliet'):
         out = []
         for s in range(0, (size + 2047) // 2048):
-            sec = self.data[(lba + s) * 2048:(lba + s + 1) * 2048]
+            sec = self.data[(lba + s) * 2048:
+                            (lba + s) * 2048 + min(2048, size - s * 2048)]
             off = 0
             while off + 33 <= len(sec):
                 rec = sec[off]
