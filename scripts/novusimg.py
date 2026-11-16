@@ -294,6 +294,9 @@ class IsoFS:
                 if rec < 33 or off + rec > len(sec):
                     break
                 nlen = sec[off + 32]
+                if 33 + nlen > rec:
+                    off += rec
+                    continue
                 ident = sec[off + 33:off + 33 + nlen]
                 if not (nlen == 1 and ident[0] in (0, 1)):
                     if name_set == 'joliet':
