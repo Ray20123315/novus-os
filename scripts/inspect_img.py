@@ -15,8 +15,13 @@ print('%s: block=%d inode_table@%d' % (path, nv.bs, nv.itbl))
 count = 0
 
 
-def walk(ino, prefix='/'):
+def walk(ino, prefix='/', ancestors=None):
     global count
+    if ancestors is None:
+        ancestors = frozenset()
+    if ino in ancestors:
+        raise ValueError('NovusFS directory cycle at %s (inode %d)' % (prefix, ino))
+    ancestors = ancestors | {ino}
     for child, name in nv.dirents(ino):
         if name in ('.', '..'):
             continue
@@ -24,7 +29,7 @@ def walk(ino, prefix='/'):
         print('  %s%s%s' % (prefix, name, '/' if mode == 2 else ''))
         count += 1
         if mode == 2:
-            walk(child, prefix + name + '/')
+            walk(child, prefix + name + '/', ancestors)
 
 
 walk(nv.root)
