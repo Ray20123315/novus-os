@@ -42,6 +42,17 @@ class SmokeTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             receive(wire, 1)
 
+    def test_rfb_rejects_zero_initial_dimensions(self):
+        for width, height in ((0, 1), (1, 0), (0, 0)):
+            with self.subTest(width=width, height=height):
+                header = (struct.pack("!HH", width, height) + bytes(16) +
+                          struct.pack("!I", 0))
+                wire = Wire(b"RFB 003.008\\n\\x01\\x01" + bytes(4) + header)
+                with patch("qemu_smoke.socket.create_connection", return_value=wire):
+                    with self.assertRaisesRegex(RuntimeError,
+                                                "invalid initial framebuffer dimensions"):
+                        Rfb(5901)
+
     def test_png_round_trip_and_corruption(self):
         rgb = bytes(range(18))
         with tempfile.TemporaryDirectory() as work:
