@@ -127,6 +127,8 @@ class Rfb:
         header = receive(self.sock, 24)
         self.width, self.height = struct.unpack_from("!HH", header)
         receive(self.sock, struct.unpack_from("!I", header, 20)[0])
+        if not self.width or not self.height:
+            raise RuntimeError("RFB invalid initial framebuffer dimensions")
         self.rgb = bytearray(self.width * self.height * 3)
         self.absolute = False
         self.sock.sendall(struct.pack("!BBBBBBBBHHHBBBxxx",
