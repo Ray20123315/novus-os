@@ -42,6 +42,21 @@ class SmokeTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             receive(wire, 1)
 
+    def test_rfb_rejects_out_of_bounds_rectangles_before_reading_pixels(self):
+        init = struct.pack("!HH", 2, 1) + bytes(16) + struct.pack("!I", 0)
+        for x, y, w, h in ((1, 0, 2, 1), (0, 1, 1, 1),
+                           (0, 0, 65535, 65535)):
+            update = (b"\\0\\0\\0\\1" +
+                      struct.pack("!HHHHi", x, y, w, h, 0))
+            wire = Wire(b"RFB 003.008\\n\\x01\\x01" + bytes(4) + init + update)
+            with patch("qemu_smoke.socket.create_connection", return_value=wire):
+                rfb = Rfb(5901)
+            with self.subTest(rectangle=(x, y, w, h)):
+                with self.assertRaisesRegex(RuntimeError,
+                                            "RFB rectangle outside framebuffer"):
+                    rfb.frame()
+                self.assertEqual(wire.data, b"")
+
     def test_png_round_trip_and_corruption(self):
         rgb = bytes(range(18))
         with tempfile.TemporaryDirectory() as work:
