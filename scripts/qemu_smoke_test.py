@@ -47,7 +47,7 @@ class SmokeTests(unittest.TestCase):
             with self.subTest(width=width, height=height):
                 header = (struct.pack("!HH", width, height) + bytes(16) +
                           struct.pack("!I", 0))
-                wire = Wire(b"RFB 003.008\\n\\x01\\x01" + bytes(4) + header)
+                wire = Wire(b"RFB 003.008\n\x01\x01" + bytes(4) + header)
                 with patch("qemu_smoke.socket.create_connection", return_value=wire):
                     with self.assertRaisesRegex(RuntimeError,
                                                 "invalid initial framebuffer dimensions"):
