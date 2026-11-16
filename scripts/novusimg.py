@@ -190,7 +190,7 @@ class FatFS:
         return result
 
     def is_dir(self, path):
-        if not path:
+        if not path.strip('/'):
             return True
         found = self.lookup(path)
         return found is not None and found[2]
@@ -270,7 +270,7 @@ class IsoFS:
         return result
 
     def is_dir(self, path, name_set='joliet'):
-        if not path:
+        if not path.strip('/'):
             return True
         found = self.lookup(path, name_set)
         return found is not None and found[2]
