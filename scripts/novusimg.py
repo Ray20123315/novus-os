@@ -78,6 +78,8 @@ class NovusFS:
         out = bytearray()
         for b in self._ids(node):
             out += self.block(b)
+        if len(out) < node['size']:
+            raise ValueError('truncated NovusFS file data')
         return bytes(out[:node['size']]), node
 
     def dirents(self, ino):
