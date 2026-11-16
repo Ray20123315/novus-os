@@ -96,6 +96,16 @@ class SmokeTests(unittest.TestCase):
             with self.assertRaises(FileNotFoundError):
                 firmware("code", str(Path(work) / "missing.fd"), "qemu")
 
+    def test_invalid_vnc_display_rejected_before_startup(self):
+        for display in (-1, 59636):
+            with self.subTest(display=display), \
+                 patch.object(sys, "argv", ["qemu-smoke", "--vnc-display", str(display)]), \
+                 patch("qemu_smoke.shutil.which") as which:
+                with self.assertRaises(SystemExit) as error:
+                    main()
+                self.assertEqual(error.exception.code, 2)
+                which.assert_not_called()
+
     def test_repeated_run_discards_stale_boot_log_and_pass_result(self):
         with tempfile.TemporaryDirectory() as work:
             root = Path(work)
