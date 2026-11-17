@@ -8,6 +8,7 @@ esp*.img    - FAT ESP, 8.3 aliases
 novus-live.iso - primary tree (aliases) + Joliet tree (original names)
 """
 import hashlib
+import json
 import os
 import re
 import sys
@@ -72,12 +73,21 @@ def check_meta(content, label, expect_mounts=True):
     if content is None:
         return
     body = content.decode('ascii', 'replace')
-    check('fstype=novusfs' in body or '"fstype"' in body,
-          '%s: bad metadata content' % label)
-    if expect_mounts:
-        for path in MOUNTS:
-            if path != '/':
-                check(path in body, '%s: missing mount path %s' % (label, path))
+    if not expect_mounts:
+        check('fstype=novusfs' in body.splitlines(),
+              '%s: bad metadata content' % label)
+        return
+    try:
+        records = [json.loads(line) for line in body.splitlines() if line.strip()]
+    except (ValueError, TypeError):
+        records = []
+    records = [record for record in records if isinstance(record, dict)]
+    check(any(record.get('path') == '/' and record.get('fstype') == 'novusfs'
+              for record in records), '%s: bad metadata content' % label)
+    for path in MOUNTS:
+        if path != '/':
+            check(any(record.get('path') == path for record in records),
+                  '%s: missing mount path %s' % (label, path))
 
 
 # ---- writable system partition -----------------------------------------
