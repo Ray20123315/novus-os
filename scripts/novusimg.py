@@ -34,7 +34,12 @@ class NovusFS:
         self.root = 1
 
     def block(self, n):
-        return self.data[n * self.bs:(n + 1) * self.bs]
+        if n < 0:
+            raise ValueError('NovusFS block outside image')
+        raw = self.data[n * self.bs:(n + 1) * self.bs]
+        if len(raw) != self.bs:
+            raise ValueError('NovusFS block outside image')
+        return raw
 
     def inode(self, ino):
         off = self.itbl * self.bs + (ino - 1) * 128
