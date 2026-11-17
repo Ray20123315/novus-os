@@ -44,7 +44,7 @@ class SmokeTests(unittest.TestCase):
 
     def test_rfb_rejects_oversized_server_name_before_receiving_payload(self):
         header = struct.pack("!HH", 2, 1) + bytes(16) + struct.pack("!I", 0xFFFFFFFF)
-        wire = Wire(b"RFB 003.008\\n\\x01\\x01" + bytes(4) + header)
+        wire = Wire(b"RFB 003.008\n\x01\x01" + bytes(4) + header)
         with patch("qemu_smoke.socket.create_connection", return_value=wire):
             with self.assertRaisesRegex(RuntimeError, "RFB server name too long"):
                 Rfb(5901)
@@ -53,7 +53,7 @@ class SmokeTests(unittest.TestCase):
     def test_rfb_accepts_server_name_at_size_limit(self):
         size = 1024 * 1024
         header = struct.pack("!HH", 2, 1) + bytes(16) + struct.pack("!I", size)
-        wire = Wire(b"RFB 003.008\\n\\x01\\x01" + bytes(4) + header + b"a" * size)
+        wire = Wire(b"RFB 003.008\n\x01\x01" + bytes(4) + header + b"a" * size)
         with patch("qemu_smoke.socket.create_connection", return_value=wire):
             rfb = Rfb(5901)
         self.assertEqual((rfb.width, rfb.height), (2, 1))
