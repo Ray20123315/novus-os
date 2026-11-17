@@ -126,7 +126,10 @@ class Rfb:
         self.sock.sendall(b"\x01")
         header = receive(self.sock, 24)
         self.width, self.height = struct.unpack_from("!HH", header)
-        receive(self.sock, struct.unpack_from("!I", header, 20)[0])
+        name_length = struct.unpack_from("!I", header, 20)[0]
+        if name_length > 1024 * 1024:
+            raise RuntimeError("RFB server name too long")
+        receive(self.sock, name_length)
         self.rgb = bytearray(self.width * self.height * 3)
         self.absolute = False
         self.sock.sendall(struct.pack("!BBBBBBBBHHHBBBxxx",
