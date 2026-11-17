@@ -308,7 +308,9 @@ class IsoFS:
         return out
 
     def lookup(self, path, name_set='joliet'):
-        lba, size = self.trees.get(name_set, self.trees['primary'])
+        if name_set not in self.trees:
+            name_set = 'primary'
+        lba, size = self.trees[name_set]
         result = None
         for comp in [c for c in path.split('/') if c]:
             result = None
