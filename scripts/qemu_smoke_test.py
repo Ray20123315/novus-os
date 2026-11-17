@@ -91,6 +91,23 @@ class SmokeTests(unittest.TestCase):
              patch("qemu_smoke.time.monotonic", return_value=0):
             guest.frames(1)
 
+    def test_invalid_timeouts_fail_before_launch(self):
+        for timeout in ("0", "-1", "inf", "-inf", "nan"):
+            with self.subTest(timeout=timeout), \
+                 patch.object(sys, "argv", ["qemu-smoke", "--timeout", timeout]), \
+                 patch("qemu_smoke.shutil.which") as which:
+                with self.assertRaises(SystemExit) as caught:
+                    main()
+                self.assertEqual(caught.exception.code, 2)
+                which.assert_not_called()
+
+    def test_positive_timeout_reaches_qemu_lookup(self):
+        with patch.object(sys, "argv", ["qemu-smoke", "--timeout", "0.5"]), \
+             patch("qemu_smoke.shutil.which", return_value=None) as which:
+            with self.assertRaises(FileNotFoundError):
+                main()
+            which.assert_called_once()
+
     def test_explicit_missing_firmware_does_not_fall_back(self):
         with tempfile.TemporaryDirectory() as work:
             with self.assertRaises(FileNotFoundError):
