@@ -140,7 +140,10 @@ class Rfb:
             if message == 2:
                 continue
             if message == 3:
-                receive(self.sock, struct.unpack_from("!I", receive(self.sock, 7), 3)[0])
+                length = struct.unpack_from("!I", receive(self.sock, 7), 3)[0]
+                if length > 1024 * 1024:
+                    raise RuntimeError("RFB clipboard message too large")
+                receive(self.sock, length)
                 continue
             if message != 0:
                 raise RuntimeError(f"unexpected RFB message {message}")
