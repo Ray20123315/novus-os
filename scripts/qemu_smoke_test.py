@@ -77,6 +77,15 @@ class SmokeTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             check_log("[ND] selftest PASS", ("[M3] live root mounted",))
 
+    def test_hyphenated_guest_task_failures_are_not_ignored(self):
+        for task in ("file-manager", "nxprobe-helper", "selftest-worker"):
+            with self.subTest(task=task):
+                with self.assertRaisesRegex(RuntimeError, "guest failure"):
+                    check_log(f"[SCHED] task {task} exited with code 3")
+        for task in ("nxprobe", "selftest"):
+            with self.subTest(task=task):
+                check_log(f"[SCHED] task {task} exited with code 0")
+
     def test_application_frames_exclude_wm_selftest(self):
         guest = Guest(Mock(), Path("unused"), 1)
         guest.deadline = 1
