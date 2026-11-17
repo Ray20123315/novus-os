@@ -21,7 +21,7 @@ class FontPayloadTest(unittest.TestCase):
         return eval(self.condition, {'__builtins__': {}}, {'font': font, 'ref': ref})
 
     def test_identical_font(self):
-        self.assertTrue(self.matches(b'\\x00font\\xff', b'\\x00font\\xff'))
+        self.assertTrue(self.matches(b'\x00font\xff', b'\x00font\xff'))
 
     def test_different_font(self):
         self.assertFalse(self.matches(b'font-A', b'font-B'))
