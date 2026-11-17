@@ -42,6 +42,27 @@ class SmokeTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             receive(wire, 1)
 
+    def test_rfb_clipboard_payload_length_is_bounded(self):
+        # ServerCutText: type 3, three padding bytes, then a 32-bit length.
+        wire = Wire(b"\x03\0\0\0" + struct.pack("!I", 1024 * 1024 + 1))
+        rfb = Rfb.__new__(Rfb)
+        rfb.sock = wire
+        rfb.width, rfb.height = 2, 1
+        with self.assertRaisesRegex(RuntimeError, "clipboard message too large"):
+            rfb.frame()
+        self.assertEqual(wire.data, b"")
+
+    def test_rfb_small_clipboard_message_is_ignored(self):
+        update = (b"\0\0\0\x01" +
+                  struct.pack("!HHHHi", 0, 0, 2, 1, 0) +
+                  b"\x03\x02\x01\0\x06\x05\x04\0")
+        wire = Wire(b"\x03\0\0\0" + struct.pack("!I", 3) + b"abc" + update)
+        rfb = Rfb.__new__(Rfb)
+        rfb.sock = wire
+        rfb.width, rfb.height = 2, 1
+        rfb.rgb = bytearray(6)
+        self.assertEqual(rfb.frame(), b"\x01\x02\x03\x04\x05\x06")
+
     def test_png_round_trip_and_corruption(self):
         rgb = bytes(range(18))
         with tempfile.TemporaryDirectory() as work:
