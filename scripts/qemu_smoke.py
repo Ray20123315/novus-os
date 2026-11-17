@@ -19,7 +19,7 @@ import zlib
 ROOT = Path(__file__).absolute().parents[1]
 FAILURES = re.compile(r"\[FATAL\]|\[TRAP\] kernel fault|selftest(?:\s*:\s*|\s+)FAIL\b|"
                       r"\[ND\] FAIL:|display list over|app launch failed|"
-                      r"\[SCHED\] task (?!selftest\b|nxprobe\b)\w+ exited")
+                      r"\[SCHED\] task (?!selftest |nxprobe )[\w-]+ exited")
 
 
 def check_log(text: str, required: tuple[str, ...] = ()) -> None:
