@@ -7,7 +7,6 @@ novus.img   - writable NovusFS, original names
 esp*.img    - FAT ESP, 8.3 aliases
 novus-live.iso - primary tree (aliases) + Joliet tree (original names)
 """
-import hashlib
 import os
 import re
 import sys
@@ -93,8 +92,7 @@ if img is not None:
     font = nv.read_file('Novus/fonts/font.bin')
     with open(os.path.join(ROOT, 'graphics', 'nd_font_data.bin'), 'rb') as fh:
         ref = fh.read()
-    check(font is not None and hashlib.md5(font).hexdigest() ==
-          hashlib.md5(ref).hexdigest(), 'novus.img: font payload mismatch')
+    check(font is not None and font == ref, 'novus.img: font payload mismatch')
 
 # ---- FAT ESP template and live ESP --------------------------------------
 for name in ('esp-tpl.img', 'esp.img'):
