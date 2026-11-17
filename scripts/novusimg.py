@@ -232,7 +232,10 @@ class FatFS:
         for comp in [c for c in path.split('/') if c]:
             if result is not None and not result[2]:
                 return None
-            want = short_name(comp)
+            try:
+                want = short_name(comp)
+            except UnicodeEncodeError:
+                return None
             result = None
             for nm, first, size, is_dir in self.entries(cluster):
                 if nm == want:
