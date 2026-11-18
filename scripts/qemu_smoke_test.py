@@ -54,6 +54,23 @@ class SmokeTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 read_png(image)
 
+    def test_png_rejects_trailing_bytes_in_idat_zlib_stream(self):
+        import zlib
+
+        with tempfile.TemporaryDirectory() as work:
+            image = Path(work) / "frame.png"
+            write_png(image, 1, 1, bytes((1, 2, 3)))
+            png = image.read_bytes()
+            idat = png.index(b"IDAT")
+            size = struct.unpack_from("!I", png, idat - 4)[0]
+            end = idat + 4 + size
+            payload = png[idat + 4:end] + b"JUNK"
+            replacement = (struct.pack("!I", len(payload)) + b"IDAT" + payload +
+                           struct.pack("!I", zlib.crc32(b"IDAT" + payload)))
+            image.write_bytes(png[:idat - 4] + replacement + png[end + 4:])
+            with self.assertRaisesRegex(ValueError, "trailing data in PNG zlib stream"):
+                read_png(image)
+
     def test_visual_thresholds_and_dynamic_region_mask(self):
         rgb = bytes(4 * 3)
         changed = bytes([9, 0, 0]) + bytes(9)
