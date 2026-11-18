@@ -69,6 +69,8 @@ def read_png(path: Path) -> tuple[int, int, bytes]:
             compressed.extend(payload)
         elif kind == b"IEND":
             break
+        elif kind and not (kind[0] & 0x20):
+            raise ValueError("unknown critical PNG chunk")
         offset += size + 12
     rows = zlib.decompress(compressed)
     stride = width * 3 + 1
