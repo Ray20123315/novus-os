@@ -5,7 +5,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from qemu_smoke import Guest, Rfb, check_log, compare, firmware, main, read_png, receive, write_png
+from qemu_smoke import (Guest, Rfb, check_log, compare, firmware, main, read_png,
+                        receive, validate_framebuffer, write_png)
 
 
 class Wire:
@@ -41,6 +42,28 @@ class SmokeTests(unittest.TestCase):
                          struct.pack("!BBHI", 4, 0, 0, 0xFF09))
         with self.assertRaises(RuntimeError):
             receive(wire, 1)
+
+    def test_rfb_rejects_oversized_initial_framebuffer(self):
+        init = struct.pack("!HH", 65535, 65535) + bytes(20)
+        wire = Wire(b"RFB 003.008\n\x01\x01" + bytes(4) + init)
+        with patch("qemu_smoke.socket.create_connection", return_value=wire):
+            with self.assertRaisesRegex(RuntimeError, "invalid framebuffer dimensions"):
+                Rfb(5901)
+
+    def test_rfb_rejects_oversized_desktop_resize(self):
+        init = struct.pack("!HH", 2, 2) + bytes(20)
+        update = b"\0\0\0\1" + struct.pack("!HHHHi", 0, 0, 65535, 65535, -223)
+        wire = Wire(b"RFB 003.008\n\x01\x01" + bytes(4) + init + update)
+        with patch("qemu_smoke.socket.create_connection", return_value=wire):
+            rfb = Rfb(5901)
+        with self.assertRaisesRegex(RuntimeError, "invalid framebuffer dimensions"):
+            rfb.frame()
+        self.assertEqual((rfb.width, rfb.height), (2, 2))
+
+    def test_rfb_framebuffer_pixel_limit_boundary(self):
+        validate_framebuffer(4096, 4096)
+        with self.assertRaisesRegex(RuntimeError, "invalid framebuffer dimensions"):
+            validate_framebuffer(4097, 4096)
 
     def test_png_round_trip_and_corruption(self):
         rgb = bytes(range(18))
