@@ -52,6 +52,7 @@ def read_png(path: Path) -> tuple[int, int, bytes]:
         raise ValueError(f"not a PNG baseline: {path}")
     offset, width, height = 8, 0, 0
     compressed = bytearray()
+    seen_iend = False
     while offset < len(data):
         size = struct.unpack_from("!I", data, offset)[0]
         kind = data[offset + 4:offset + 8]
@@ -68,8 +69,11 @@ def read_png(path: Path) -> tuple[int, int, bytes]:
         elif kind == b"IDAT":
             compressed.extend(payload)
         elif kind == b"IEND":
+            seen_iend = True
             break
         offset += size + 12
+    if not seen_iend:
+        raise ValueError("missing PNG IEND")
     rows = zlib.decompress(compressed)
     stride = width * 3 + 1
     if not width or not height or len(rows) != stride * height:
