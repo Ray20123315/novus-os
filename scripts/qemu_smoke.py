@@ -66,6 +66,8 @@ def read_png(path: Path) -> tuple[int, int, bytes]:
             if (depth, color, comp, filt, interlace) != (8, 2, 0, 0, 0):
                 raise ValueError("baseline must be a smoke-generated RGB PNG")
         elif kind == b"IDAT":
+            if not width or not height:
+                raise ValueError("PNG IHDR must precede IDAT")
             compressed.extend(payload)
         elif kind == b"IEND":
             break
