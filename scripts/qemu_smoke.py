@@ -100,6 +100,15 @@ def compare(actual: bytes, expected: bytes, width: int, height: int,
                            f"(limit {max_changed:.3%}, channel tolerance {tolerance})")
 
 
+MAX_RFB_PIXELS = 4096 * 4096
+
+
+def validate_framebuffer(width: int, height: int) -> None:
+    # Bound allocations and raw rectangle payloads from untrusted RFB dimensions.
+    if not width or not height or width * height > MAX_RFB_PIXELS:
+        raise RuntimeError("RFB invalid framebuffer dimensions")
+
+
 def receive(sock: socket.socket, length: int) -> bytes:
     result = bytearray()
     while len(result) < length:
@@ -127,6 +136,7 @@ class Rfb:
         header = receive(self.sock, 24)
         self.width, self.height = struct.unpack_from("!HH", header)
         receive(self.sock, struct.unpack_from("!I", header, 20)[0])
+        validate_framebuffer(self.width, self.height)
         self.rgb = bytearray(self.width * self.height * 3)
         self.absolute = False
         self.sock.sendall(struct.pack("!BBBBBBBBHHHBBBxxx",
@@ -151,6 +161,7 @@ class Rfb:
                 if encoding == -257:
                     self.absolute = bool(x)
                 elif encoding == -223:
+                    validate_framebuffer(w, h)
                     self.width, self.height = w, h
                     self.rgb = bytearray(w * h * 3)
                 elif encoding == 0:
