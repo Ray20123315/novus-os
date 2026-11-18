@@ -70,10 +70,16 @@ def read_png(path: Path) -> tuple[int, int, bytes]:
         elif kind == b"IEND":
             break
         offset += size + 12
-    rows = zlib.decompress(compressed)
-    stride = width * 3 + 1
-    if not width or not height or len(rows) != stride * height:
+    # Bound decompression to the expected image size before allocating its output.
+    if not 0 < width <= 4096 or not 0 < height <= 4096:
         raise ValueError("invalid PNG dimensions")
+    stride = width * 3 + 1
+    expected = stride * height
+    decoder = zlib.decompressobj()
+    rows = decoder.decompress(compressed, expected + 1)
+    if (len(rows) != expected or not decoder.eof or
+            decoder.unused_data or decoder.unconsumed_tail):
+        raise ValueError("invalid PNG decompressed length")
     if any(rows[y * stride] != 0 for y in range(height)):
         raise ValueError("baseline must retain the smoke writer's PNG filters")
     return width, height, b"".join(rows[y * stride + 1:(y + 1) * stride]
