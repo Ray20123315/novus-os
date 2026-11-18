@@ -52,6 +52,8 @@ def read_png(path: Path) -> tuple[int, int, bytes]:
         raise ValueError(f"not a PNG baseline: {path}")
     offset, width, height = 8, 0, 0
     compressed = bytearray()
+    seen_idat = False
+    idat_ended = False
     while offset < len(data):
         size = struct.unpack_from("!I", data, offset)[0]
         kind = data[offset + 4:offset + 8]
@@ -61,11 +63,16 @@ def read_png(path: Path) -> tuple[int, int, bytes]:
         crc = struct.unpack_from("!I", data, offset + 8 + size)[0]
         if zlib.crc32(kind + payload) != crc:
             raise ValueError("PNG checksum mismatch")
+        if kind != b"IDAT" and seen_idat:
+            idat_ended = True
         if kind == b"IHDR":
             width, height, depth, color, comp, filt, interlace = struct.unpack("!IIBBBBB", payload)
             if (depth, color, comp, filt, interlace) != (8, 2, 0, 0, 0):
                 raise ValueError("baseline must be a smoke-generated RGB PNG")
         elif kind == b"IDAT":
+            if idat_ended:
+                raise ValueError("nonconsecutive PNG IDAT chunks")
+            seen_idat = True
             compressed.extend(payload)
         elif kind == b"IEND":
             break
