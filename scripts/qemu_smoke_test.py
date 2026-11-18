@@ -54,6 +54,21 @@ class SmokeTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 read_png(image)
 
+    def test_png_rejects_idat_before_ihdr(self):
+        with tempfile.TemporaryDirectory() as work:
+            image = Path(work) / "frame.png"
+            rgb = bytes((1, 2, 3))
+            write_png(image, 1, 1, rgb)
+            valid = image.read_bytes()
+            self.assertEqual(read_png(image), (1, 1, rgb))
+            ihdr = valid[8:33]
+            idat_size = struct.unpack_from("!I", valid, 33)[0]
+            idat_end = 45 + idat_size
+            idat = valid[33:idat_end]
+            image.write_bytes(valid[:8] + idat + ihdr + valid[idat_end:])
+            with self.assertRaisesRegex(ValueError, "PNG IHDR must precede IDAT"):
+                read_png(image)
+
     def test_visual_thresholds_and_dynamic_region_mask(self):
         rgb = bytes(4 * 3)
         changed = bytes([9, 0, 0]) + bytes(9)
