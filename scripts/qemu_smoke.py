@@ -70,7 +70,10 @@ def read_png(path: Path) -> tuple[int, int, bytes]:
         elif kind == b"IEND":
             break
         offset += size + 12
-    rows = zlib.decompress(compressed)
+    decoder = zlib.decompressobj()
+    rows = decoder.decompress(compressed) + decoder.flush()
+    if decoder.unused_data:
+        raise ValueError("trailing data in PNG zlib stream")
     stride = width * 3 + 1
     if not width or not height or len(rows) != stride * height:
         raise ValueError("invalid PNG dimensions")
