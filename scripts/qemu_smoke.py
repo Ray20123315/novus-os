@@ -62,6 +62,8 @@ def read_png(path: Path) -> tuple[int, int, bytes]:
         if zlib.crc32(kind + payload) != crc:
             raise ValueError("PNG checksum mismatch")
         if kind == b"IHDR":
+            if len(payload) != 13:
+                raise ValueError("invalid PNG IHDR length")
             width, height, depth, color, comp, filt, interlace = struct.unpack("!IIBBBBB", payload)
             if (depth, color, comp, filt, interlace) != (8, 2, 0, 0, 0):
                 raise ValueError("baseline must be a smoke-generated RGB PNG")
