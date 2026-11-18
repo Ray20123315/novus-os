@@ -1,4 +1,5 @@
 import struct
+import zlib
 import sys
 import tempfile
 import unittest
@@ -53,6 +54,27 @@ class SmokeTests(unittest.TestCase):
             image.write_bytes(corrupt)
             with self.assertRaises(ValueError):
                 read_png(image)
+
+    def test_png_rejects_oversized_decompression_and_invalid_streams(self):
+        def png_with_rows(rows):
+            def chunk(kind, payload):
+                return (struct.pack("!I", len(payload)) + kind + payload +
+                        struct.pack("!I", zlib.crc32(kind + payload)))
+            header = struct.pack("!IIBBBBB", 1, 1, 8, 2, 0, 0, 0)
+            return (b"\\x89PNG\\r\\n\\x1a\\n" +
+                    chunk(b"IHDR", header) + chunk(b"IDAT", rows) +
+                    chunk(b"IEND", b""))
+
+        with tempfile.TemporaryDirectory() as work:
+            image = Path(work) / "baseline.png"
+            for stream in (zlib.compress(bytes(1000000)),
+                           zlib.compress(b"\\0abc")[:-1],
+                           zlib.compress(b"\\0abc") + b"extra"):
+                image.write_bytes(png_with_rows(stream))
+                with self.assertRaises(ValueError):
+                    read_png(image)
+            image.write_bytes(png_with_rows(zlib.compress(b"\\0abc")))
+            self.assertEqual(read_png(image), (1, 1, b"abc"))
 
     def test_visual_thresholds_and_dynamic_region_mask(self):
         rgb = bytes(4 * 3)
