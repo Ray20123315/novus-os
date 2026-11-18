@@ -59,9 +59,9 @@ class SmokeTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as work:
             image = Path(work) / "frame.png"
-            write_png(image, 1, 1, b"\\x01\\x02\\x03")
+            write_png(image, 1, 1, b"\x01\x02\x03")
             valid = image.read_bytes()
-            self.assertEqual(read_png(image), (1, 1, b"\\x01\\x02\\x03"))
+            self.assertEqual(read_png(image), (1, 1, b"\x01\x02\x03"))
             for payload in (valid[16:28], valid[16:30]):
                 with self.subTest(length=len(payload)):
                     header = (struct.pack("!I", len(payload)) + b"IHDR" + payload +
