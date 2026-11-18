@@ -44,9 +44,9 @@ class SmokeTests(unittest.TestCase):
 
     def test_rfb_rejects_zero_area_raw_rectangle(self):
         init = struct.pack("!HH", 2, 1) + bytes(16) + struct.pack("!I", 0)
-        update = (b"\\0\\0\\0\\1" +
+        update = (b"\0\0\0\1" +
                   struct.pack("!HHHHi", 0, 0, 0, 1, 0))
-        wire = Wire(b"RFB 003.008\\n\\x01\\x01" + bytes(4) + init + update)
+        wire = Wire(b"RFB 003.008\n\x01\x01" + bytes(4) + init + update)
         with patch("qemu_smoke.socket.create_connection", return_value=wire):
             rfb = Rfb(5901)
         with self.assertRaisesRegex(RuntimeError, "zero area"):
