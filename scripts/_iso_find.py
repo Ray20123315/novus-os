@@ -35,7 +35,8 @@ while pos <= len(iso) - len(ref):
         found.append(idx)
         print('  MATCH at iso offset %d (0x%x), sector %d' %
               (idx, idx, idx // 2048))
-        pos = idx + len(ref)
+        # Advance one byte so overlapping occurrences are not skipped.
+        pos = idx + 1
     else:
         pos = idx + 1
 print('matches: %d' % len(found))
