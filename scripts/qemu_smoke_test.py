@@ -42,6 +42,17 @@ class SmokeTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             receive(wire, 1)
 
+    def test_rfb_rejects_out_of_bounds_raw_rect_before_payload(self):
+        # A malformed server omits the payload; bounds validation must run first.
+        update = b"\\0\\0\\0\\1" + struct.pack("!HHHHi", 1, 0, 2, 1, 0)
+        wire = Wire(update)
+        rfb = Rfb.__new__(Rfb)
+        rfb.sock = wire
+        rfb.width, rfb.height = 2, 1
+        rfb.rgb = bytearray(6)
+        with self.assertRaisesRegex(RuntimeError, "RFB rectangle outside framebuffer"):
+            rfb.frame()
+
     def test_png_round_trip_and_corruption(self):
         rgb = bytes(range(18))
         with tempfile.TemporaryDirectory() as work:
