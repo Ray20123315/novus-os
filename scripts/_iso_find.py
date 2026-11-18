@@ -44,7 +44,7 @@ print('matches: %d' % len(found))
 # root tree occupies the first ~80 inodes.
 print('scanning for NOVS superblocks at 2048-aligned offsets:')
 seen = {}
-for off in range(0, len(iso) - BLOCK, 2048):
+for off in range(0, len(iso) - BLOCK + 1, 2048):
     if r32(iso, off) == 0x4E4F5653:
         itbl = r64(iso, off + 24)
         total = r64(iso, off + 12)
