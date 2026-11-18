@@ -19,6 +19,8 @@ iso_path = sys.argv[1] if len(sys.argv) > 1 else 'out/novus-live.iso'
 ref_path = sys.argv[2] if len(sys.argv) > 2 else 'out/novus.img'
 with open(ref_path, 'rb') as fh:
     ref = fh.read()
+if not ref:
+    raise SystemExit('empty reference image: %s' % ref_path)
 with open(iso_path, 'rb') as fh:
     iso = fh.read()
 
