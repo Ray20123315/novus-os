@@ -54,6 +54,19 @@ class SmokeTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 read_png(image)
 
+    def test_png_requires_iend_chunk(self):
+        rgb = b"\x01\x02\x03"
+        with tempfile.TemporaryDirectory() as work:
+            image = Path(work) / "frame.png"
+            write_png(image, 1, 1, rgb)
+            valid = image.read_bytes()
+            self.assertEqual(read_png(image), (1, 1, rgb))
+            self.assertEqual(valid[-12:-8], b"\0\0\0\0")
+            self.assertEqual(valid[-8:-4], b"IEND")
+            image.write_bytes(valid[:-12])
+            with self.assertRaisesRegex(ValueError, "missing PNG IEND"):
+                read_png(image)
+
     def test_visual_thresholds_and_dynamic_region_mask(self):
         rgb = bytes(4 * 3)
         changed = bytes([9, 0, 0]) + bytes(9)
