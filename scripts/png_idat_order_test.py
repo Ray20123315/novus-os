@@ -26,7 +26,7 @@ class PngIdatOrderTests(unittest.TestCase):
             split = max(1, len(payload) // 2)
             malformed = (valid[:ihdr_end] +
                          chunk(b"IDAT", payload[:split]) +
-                         chunk(b"tEXt", b"note\\0test") +
+                         chunk(b"tEXt", b"note\x00test") +
                          chunk(b"IDAT", payload[split:]) +
                          chunk(b"IEND", b""))
             path.write_bytes(malformed)
