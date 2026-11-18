@@ -54,6 +54,22 @@ class SmokeTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 read_png(image)
 
+    def test_png_rejects_invalid_ihdr_lengths(self):
+        import zlib
+
+        with tempfile.TemporaryDirectory() as work:
+            image = Path(work) / "frame.png"
+            write_png(image, 1, 1, b"\\x01\\x02\\x03")
+            valid = image.read_bytes()
+            self.assertEqual(read_png(image), (1, 1, b"\\x01\\x02\\x03"))
+            for payload in (valid[16:28], valid[16:30]):
+                with self.subTest(length=len(payload)):
+                    header = (struct.pack("!I", len(payload)) + b"IHDR" + payload +
+                              struct.pack("!I", zlib.crc32(b"IHDR" + payload)))
+                    image.write_bytes(valid[:8] + header + valid[33:])
+                    with self.assertRaisesRegex(ValueError, "invalid PNG IHDR length"):
+                        read_png(image)
+
     def test_visual_thresholds_and_dynamic_region_mask(self):
         rgb = bytes(4 * 3)
         changed = bytes([9, 0, 0]) + bytes(9)
