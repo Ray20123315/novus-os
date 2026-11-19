@@ -87,6 +87,8 @@ def compare(actual: bytes, expected: bytes, width: int, height: int,
         raise ValueError("baseline dimensions differ")
     changed = total = 0
     for x, y, w, h in regions:
+        if w == 0 or h == 0:
+            raise ValueError("empty comparison region")
         if min(x, y, w, h) < 0 or x + w > width or y + h > height:
             raise ValueError("comparison region outside screenshot")
         for row in range(y, y + h):
