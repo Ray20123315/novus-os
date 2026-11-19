@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -363,7 +364,7 @@ def main() -> None:
     parser.add_argument("--tolerance", type=int, default=8)
     parser.add_argument("--max-changed", type=float, default=0.002)
     args = parser.parse_args()
-    if not 0 <= args.tolerance <= 255 or not 0 <= args.max_changed < 1:
+    if not 0 <= args.tolerance <= 255 or not (math.isfinite(args.max_changed) and 0 <= args.max_changed < 1):
         parser.error("comparison thresholds outside their valid range")
     qemu = shutil.which(args.qemu)
     if qemu is None:
