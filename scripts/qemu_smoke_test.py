@@ -42,6 +42,24 @@ class SmokeTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             receive(wire, 1)
 
+    def test_rfb_keysym_wire_range(self):
+        wire = Wire(b"")
+        rfb = Rfb.__new__(Rfb)
+        rfb.sock = wire
+        with patch("qemu_smoke.time.sleep"):
+            rfb.key(0)
+            rfb.key(0xffffffff)
+            self.assertEqual(wire.sent, (struct.pack("!BBHI", 4, 1, 0, 0) +
+                                         struct.pack("!BBHI", 4, 0, 0, 0) +
+                                         struct.pack("!BBHI", 4, 1, 0, 0xffffffff) +
+                                         struct.pack("!BBHI", 4, 0, 0, 0xffffffff)))
+            for invalid in (-1, 0x100000000):
+                with self.subTest(keysym=invalid):
+                    before = bytes(wire.sent)
+                    with self.assertRaisesRegex(ValueError, "keysym outside wire range"):
+                        rfb.key(invalid)
+                    self.assertEqual(bytes(wire.sent), before)
+
     def test_png_round_trip_and_corruption(self):
         rgb = bytes(range(18))
         with tempfile.TemporaryDirectory() as work:
