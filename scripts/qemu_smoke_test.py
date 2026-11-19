@@ -61,12 +61,12 @@ class SmokeTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as work:
             image = Path(work) / "frame.png"
-            write_png(image, 1, 1, b"\\x01\\x02\\x03")
+            write_png(image, 1, 1, b"\x01\x02\x03")
             original = image.read_bytes()
             # Insert a CRC-valid ancillary chunk immediately after IHDR.
             insertion = 8 + 12 + 13
             image.write_bytes(original[:insertion] + chunk(b"tEXt") + original[insertion:])
-            self.assertEqual(read_png(image), (1, 1, b"\\x01\\x02\\x03"))
+            self.assertEqual(read_png(image), (1, 1, b"\x01\x02\x03"))
             image.write_bytes(original[:insertion] + chunk(b"tExt") + original[insertion:])
             with self.assertRaisesRegex(ValueError, "reserved chunk type bit"):
                 read_png(image)
