@@ -58,6 +58,8 @@ def read_png(path: Path) -> tuple[int, int, bytes]:
         payload = data[offset + 8:offset + 8 + size]
         if len(payload) != size or offset + 12 + size > len(data):
             raise ValueError("truncated PNG")
+        if len(kind) != 4 or not all(65 <= byte <= 90 or 97 <= byte <= 122 for byte in kind):
+            raise ValueError("invalid PNG chunk type")
         crc = struct.unpack_from("!I", data, offset + 8 + size)[0]
         if zlib.crc32(kind + payload) != crc:
             raise ValueError("PNG checksum mismatch")
