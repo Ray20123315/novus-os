@@ -113,6 +113,13 @@ def receive(sock: socket.socket, length: int) -> bytes:
 class Rfb:
     def __init__(self, port: int):
         self.sock = socket.create_connection(("127.0.0.1", port), timeout=15)
+        try:
+            self._initialize()
+        except BaseException:
+            self.sock.close()
+            raise
+
+    def _initialize(self) -> None:
         version = receive(self.sock, 12)
         if version != b"RFB 003.008\n":
             raise RuntimeError(f"unsupported RFB version: {version!r}")
