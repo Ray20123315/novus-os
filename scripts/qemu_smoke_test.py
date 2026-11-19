@@ -45,7 +45,7 @@ class SmokeTests(unittest.TestCase):
     def test_rfb_desktopsize_requires_origin(self):
         for x, y in ((1, 0), (0, 1)):
             with self.subTest(x=x, y=y):
-                wire = Wire(b"\\0\\0\\0\\1" + struct.pack("!HHHHi", x, y, 2, 2, -223))
+                wire = Wire(b"\0\0\0\1" + struct.pack("!HHHHi", x, y, 2, 2, -223))
                 rfb = Rfb.__new__(Rfb)
                 rfb.sock, rfb.width, rfb.height = wire, 2, 2
                 rfb.rgb = bytearray(12)
