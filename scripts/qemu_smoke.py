@@ -52,6 +52,7 @@ def read_png(path: Path) -> tuple[int, int, bytes]:
         raise ValueError(f"not a PNG baseline: {path}")
     offset, width, height = 8, 0, 0
     compressed = bytearray()
+    seen_ihdr = False
     while offset < len(data):
         size = struct.unpack_from("!I", data, offset)[0]
         kind = data[offset + 4:offset + 8]
@@ -62,6 +63,9 @@ def read_png(path: Path) -> tuple[int, int, bytes]:
         if zlib.crc32(kind + payload) != crc:
             raise ValueError("PNG checksum mismatch")
         if kind == b"IHDR":
+            if seen_ihdr:
+                raise ValueError("duplicate PNG IHDR chunk")
+            seen_ihdr = True
             width, height, depth, color, comp, filt, interlace = struct.unpack("!IIBBBBB", payload)
             if (depth, color, comp, filt, interlace) != (8, 2, 0, 0, 0):
                 raise ValueError("baseline must be a smoke-generated RGB PNG")
