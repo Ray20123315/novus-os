@@ -54,6 +54,18 @@ class SmokeTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 read_png(image)
 
+    def test_png_truncated_chunk_header(self):
+        with tempfile.TemporaryDirectory() as work:
+            image = Path(work) / "frame.png"
+            write_png(image, 1, 1, b"\x5cx01\x5cx02\x5cx03")
+            original = image.read_bytes()
+            self.assertEqual(read_png(image), (1, 1, b"\x5cx01\x5cx02\x5cx03"))
+            for length in (1, 2, 3):
+                with self.subTest(length=length):
+                    image.write_bytes(original[:-12] + bytes(length))
+                    with self.assertRaisesRegex(ValueError, "truncated PNG"):
+                        read_png(image)
+
     def test_visual_thresholds_and_dynamic_region_mask(self):
         rgb = bytes(4 * 3)
         changed = bytes([9, 0, 0]) + bytes(9)
