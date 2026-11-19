@@ -1,4 +1,5 @@
 import struct
+import zlib
 import sys
 import tempfile
 import unittest
@@ -52,6 +53,21 @@ class SmokeTests(unittest.TestCase):
             corrupt[20] ^= 1
             image.write_bytes(corrupt)
             with self.assertRaises(ValueError):
+                read_png(image)
+
+    def test_png_rejects_nonempty_iend(self):
+        rgb = bytes([1, 2, 3])
+        with tempfile.TemporaryDirectory() as work:
+            image = Path(work) / "frame.png"
+            write_png(image, 1, 1, rgb)
+            self.assertEqual(read_png(image), (1, 1, rgb))
+            original = image.read_bytes()
+            self.assertEqual(original[-8:-4], b"IEND")
+            payload = b"X"
+            malformed_iend = (struct.pack("!I", len(payload)) + b"IEND" + payload +
+                              struct.pack("!I", zlib.crc32(b"IEND" + payload)))
+            image.write_bytes(original[:-12] + malformed_iend)
+            with self.assertRaisesRegex(ValueError, "IEND chunk must be empty"):
                 read_png(image)
 
     def test_visual_thresholds_and_dynamic_region_mask(self):
