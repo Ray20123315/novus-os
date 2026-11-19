@@ -54,6 +54,20 @@ class SmokeTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 read_png(image)
 
+    def test_png_rejects_duplicate_ihdr(self):
+        rgb = bytes([1, 2, 3])
+        with tempfile.TemporaryDirectory() as work:
+            image = Path(work) / "frame.png"
+            write_png(image, 1, 1, rgb)
+            original = image.read_bytes()
+            ihdr = original[8:33]
+            self.assertEqual(len(ihdr), 25)
+            image.write_bytes(original[:33] + ihdr + original[33:])
+            with self.assertRaisesRegex(ValueError, "duplicate PNG IHDR"):
+                read_png(image)
+            image.write_bytes(original)
+            self.assertEqual(read_png(image), (1, 1, rgb))
+
     def test_visual_thresholds_and_dynamic_region_mask(self):
         rgb = bytes(4 * 3)
         changed = bytes([9, 0, 0]) + bytes(9)
