@@ -66,6 +66,14 @@ class SmokeTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             compare(changed, bytes(3), 2, 2, [(0, 0, 2, 2)], 8, 0)
 
+    def test_comparison_rejects_empty_regions(self):
+        rgb = bytes(2 * 2 * 3)
+        for region in ((0, 0, 0, 1), (0, 0, 1, 0)):
+            with self.subTest(region=region):
+                with self.assertRaisesRegex(ValueError, "empty comparison region"):
+                    compare(rgb, rgb, 2, 2, [(0, 0, 2, 2), region], 8, 0)
+        compare(rgb, rgb, 2, 2, [(0, 0, 2, 2)], 8, 0)
+
     def test_boot_assertions_reject_faults_and_missing_markers(self):
         check_log("[ND] selftest PASS", ("[ND] selftest PASS",))
         check_log("[SCHED] task nxprobe exited with code 0xFFFFFFFF")
