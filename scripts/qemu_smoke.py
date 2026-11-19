@@ -170,6 +170,8 @@ class Rfb:
             self.sock.sendall(struct.pack("!BBHHHH", 3, 0, 0, 0, self.width, self.height))
 
     def pointer(self, x: int, y: int, buttons: int = 0) -> None:
+        if not (0 <= x <= 0xffff and 0 <= y <= 0xffff and 0 <= buttons <= 0xff):
+            raise ValueError("RFB pointer values outside wire range")
         self.sock.sendall(struct.pack("!BBHH", 5, buttons, x, y))
 
     def click(self, x: int, y: int) -> None:
