@@ -1,5 +1,6 @@
 import struct
 import sys
+import zlib
 import tempfile
 import unittest
 from pathlib import Path
@@ -52,6 +53,22 @@ class SmokeTests(unittest.TestCase):
             corrupt[20] ^= 1
             image.write_bytes(corrupt)
             with self.assertRaises(ValueError):
+                read_png(image)
+
+    def test_png_rejects_lowercase_reserved_chunk_type_bit(self):
+        def chunk(kind: bytes) -> bytes:
+            return struct.pack("!I", 0) + kind + struct.pack("!I", zlib.crc32(kind))
+
+        with tempfile.TemporaryDirectory() as work:
+            image = Path(work) / "frame.png"
+            write_png(image, 1, 1, b"\\x01\\x02\\x03")
+            original = image.read_bytes()
+            # Insert a CRC-valid ancillary chunk immediately after IHDR.
+            insertion = 8 + 12 + 13
+            image.write_bytes(original[:insertion] + chunk(b"tEXt") + original[insertion:])
+            self.assertEqual(read_png(image), (1, 1, b"\\x01\\x02\\x03"))
+            image.write_bytes(original[:insertion] + chunk(b"tExt") + original[insertion:])
+            with self.assertRaisesRegex(ValueError, "reserved chunk type bit"):
                 read_png(image)
 
     def test_visual_thresholds_and_dynamic_region_mask(self):
