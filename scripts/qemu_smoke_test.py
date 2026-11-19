@@ -96,6 +96,20 @@ class SmokeTests(unittest.TestCase):
             with self.assertRaises(FileNotFoundError):
                 firmware("code", str(Path(work) / "missing.fd"), "qemu")
 
+    def test_visual_threshold_rejects_nonfinite_values(self):
+        for value in ("nan", "inf", "-inf", "1.0", "-0.1"):
+            with self.subTest(value=value), \
+                 patch.object(sys, "argv", ["qemu-smoke", "--max-changed", value]), \
+                 patch("qemu_smoke.shutil.which") as which:
+                with self.assertRaises(SystemExit):
+                    main()
+                which.assert_not_called()
+
+        with patch.object(sys, "argv", ["qemu-smoke", "--max-changed", "0.002"]), \
+             patch("qemu_smoke.shutil.which", return_value=None):
+            with self.assertRaises(FileNotFoundError):
+                main()
+
     def test_repeated_run_discards_stale_boot_log_and_pass_result(self):
         with tempfile.TemporaryDirectory() as work:
             root = Path(work)
