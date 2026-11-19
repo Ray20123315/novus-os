@@ -86,12 +86,17 @@ def compare(actual: bytes, expected: bytes, width: int, height: int,
     if len(actual) != width * height * 3 or len(expected) != len(actual):
         raise ValueError("baseline dimensions differ")
     changed = total = 0
+    seen = bytearray(width * height)
     for x, y, w, h in regions:
         if min(x, y, w, h) < 0 or x + w > width or y + h > height:
             raise ValueError("comparison region outside screenshot")
         for row in range(y, y + h):
             for col in range(x, x + w):
-                p = (row * width + col) * 3
+                index = row * width + col
+                if seen[index]:
+                    continue
+                seen[index] = 1
+                p = index * 3
                 changed += any(abs(actual[p + c] - expected[p + c]) > tolerance
                                for c in range(3))
                 total += 1
