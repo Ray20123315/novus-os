@@ -57,9 +57,9 @@ class SmokeTests(unittest.TestCase):
     def test_png_truncated_chunk_header(self):
         with tempfile.TemporaryDirectory() as work:
             image = Path(work) / "frame.png"
-            write_png(image, 1, 1, b"\x5cx01\x5cx02\x5cx03")
+            write_png(image, 1, 1, b"\x01\x02\x03")
             original = image.read_bytes()
-            self.assertEqual(read_png(image), (1, 1, b"\x5cx01\x5cx02\x5cx03"))
+            self.assertEqual(read_png(image), (1, 1, b"\x01\x02\x03"))
             for length in (1, 2, 3):
                 with self.subTest(length=length):
                     image.write_bytes(original[:-12] + bytes(length))
