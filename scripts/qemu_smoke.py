@@ -53,6 +53,8 @@ def read_png(path: Path) -> tuple[int, int, bytes]:
     offset, width, height = 8, 0, 0
     compressed = bytearray()
     while offset < len(data):
+        if len(data) - offset < 12:
+            raise ValueError("truncated PNG")
         size = struct.unpack_from("!I", data, offset)[0]
         kind = data[offset + 4:offset + 8]
         payload = data[offset + 8:offset + 8 + size]
