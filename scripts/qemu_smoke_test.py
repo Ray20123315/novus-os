@@ -44,7 +44,7 @@ class SmokeTests(unittest.TestCase):
 
     def test_rfb_failed_handshake_closes_socket(self):
         wire = Mock()
-        wire.recv.return_value = b"RFB 003.003\\n"
+        wire.recv.return_value = b"RFB 003.003\n"
         with patch("qemu_smoke.socket.create_connection", return_value=wire):
             with self.assertRaisesRegex(RuntimeError, "unsupported RFB version"):
                 Rfb(5901)
