@@ -68,6 +68,8 @@ def read_png(path: Path) -> tuple[int, int, bytes]:
         elif kind == b"IDAT":
             compressed.extend(payload)
         elif kind == b"IEND":
+            if payload:
+                raise ValueError("PNG IEND chunk must be empty")
             break
         offset += size + 12
     rows = zlib.decompress(compressed)
