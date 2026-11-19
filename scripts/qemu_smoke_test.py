@@ -42,6 +42,20 @@ class SmokeTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             receive(wire, 1)
 
+    def test_rfb_pointer_rejects_out_of_range_wire_fields(self):
+        wire = Wire(b"")
+        rfb = Rfb.__new__(Rfb)
+        rfb.sock = wire
+        rfb.pointer(0, 65535, 255)
+        self.assertEqual(wire.sent, struct.pack("!BBHH", 5, 255, 0, 65535))
+        for x, y, buttons in ((-1, 0, 0), (65536, 0, 0),
+                              (0, -1, 0), (0, 65536, 0),
+                              (0, 0, -1), (0, 0, 256)):
+            with self.subTest(x=x, y=y, buttons=buttons):
+                with self.assertRaisesRegex(ValueError, "wire range"):
+                    rfb.pointer(x, y, buttons)
+        self.assertEqual(wire.sent, struct.pack("!BBHH", 5, 255, 0, 65535))
+
     def test_png_round_trip_and_corruption(self):
         rgb = bytes(range(18))
         with tempfile.TemporaryDirectory() as work:
