@@ -151,6 +151,8 @@ class Rfb:
                 if encoding == -257:
                     self.absolute = bool(x)
                 elif encoding == -223:
+                    if x or y:
+                        raise RuntimeError("RFB DesktopSize rectangle must start at origin")
                     self.width, self.height = w, h
                     self.rgb = bytearray(w * h * 3)
                 elif encoding == 0:
