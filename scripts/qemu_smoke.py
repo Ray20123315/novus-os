@@ -213,7 +213,7 @@ class Guest:
     def frames(self, count: int) -> None:
         while time.monotonic() < self.deadline:
             text = self.log().split("[HALT] entering the scheduler", 1)[-1]
-            if text.count("[NWM] first frame") >= count:
+            if len(re.findall(r"^\[NWM\] first frame(?=\s|$)", text, re.MULTILINE)) >= count:
                 return
             time.sleep(0.1)
         raise TimeoutError(f"only partial UI startup: expected {count} committed windows")
