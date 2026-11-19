@@ -54,6 +54,28 @@ class SmokeTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 read_png(image)
 
+    def test_png_rejects_nonalphabetic_chunk_types(self):
+        import zlib
+
+        def chunk(kind, payload):
+            return (struct.pack("!I", len(payload)) + kind + payload +
+                    struct.pack("!I", zlib.crc32(kind + payload)))
+
+        with tempfile.TemporaryDirectory() as work:
+            image = Path(work) / "frame.png"
+            rgb = bytes((1, 2, 3))
+            write_png(image, 1, 1, rgb)
+            original = image.read_bytes()
+            self.assertEqual(read_png(image), (1, 1, rgb))
+            # Insert an ancillary chunk before IDAT, preserving valid CRCs.
+            ihdr_end = 8 + 12 + 13
+            for kind in (b"tE1t", b"tE_t", b"\\x00EXt", b"tE\\xfft"):
+                with self.subTest(kind=kind):
+                    image.write_bytes(original[:ihdr_end] + chunk(kind, b"x") +
+                                      original[ihdr_end:])
+                    with self.assertRaisesRegex(ValueError, "invalid PNG chunk type"):
+                        read_png(image)
+
     def test_visual_thresholds_and_dynamic_region_mask(self):
         rgb = bytes(4 * 3)
         changed = bytes([9, 0, 0]) + bytes(9)
