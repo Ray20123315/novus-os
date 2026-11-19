@@ -61,6 +61,8 @@ def read_png(path: Path) -> tuple[int, int, bytes]:
         crc = struct.unpack_from("!I", data, offset + 8 + size)[0]
         if zlib.crc32(kind + payload) != crc:
             raise ValueError("PNG checksum mismatch")
+        if len(kind) != 4 or not 65 <= kind[2] <= 90:
+            raise ValueError("invalid PNG reserved chunk type bit")
         if kind == b"IHDR":
             width, height, depth, color, comp, filt, interlace = struct.unpack("!IIBBBBB", payload)
             if (depth, color, comp, filt, interlace) != (8, 2, 0, 0, 0):
