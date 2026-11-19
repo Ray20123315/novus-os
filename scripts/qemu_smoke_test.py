@@ -91,6 +91,22 @@ class SmokeTests(unittest.TestCase):
              patch("qemu_smoke.time.monotonic", return_value=0):
             guest.frames(1)
 
+    def test_application_frames_ignore_similarly_named_log_events(self):
+        guest = Guest(Mock(), Path("unused"), 1)
+        guest.deadline = 1
+        misleading = ("[HALT] entering the scheduler\\n"
+                      "[NWM] first framebuffer allocated\\n"
+                      "[NWM] first frame-debug enabled\\n")
+        with patch.object(guest, "log", return_value=misleading), \\
+             patch("qemu_smoke.time.monotonic", side_effect=[0, 2]), \\
+             patch("qemu_smoke.time.sleep"):
+            with self.assertRaises(TimeoutError):
+                guest.frames(1)
+        valid = misleading + "[NWM] first frame win=3\\n"
+        with patch.object(guest, "log", return_value=valid), \\
+             patch("qemu_smoke.time.monotonic", return_value=0):
+            guest.frames(1)
+
     def test_explicit_missing_firmware_does_not_fall_back(self):
         with tempfile.TemporaryDirectory() as work:
             with self.assertRaises(FileNotFoundError):
