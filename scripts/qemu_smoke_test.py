@@ -42,6 +42,14 @@ class SmokeTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             receive(wire, 1)
 
+    def test_rfb_failed_handshake_closes_socket(self):
+        wire = Mock()
+        wire.recv.return_value = b"RFB 003.003\\n"
+        with patch("qemu_smoke.socket.create_connection", return_value=wire):
+            with self.assertRaisesRegex(RuntimeError, "unsupported RFB version"):
+                Rfb(5901)
+        wire.close.assert_called_once_with()
+
     def test_png_round_trip_and_corruption(self):
         rgb = bytes(range(18))
         with tempfile.TemporaryDirectory() as work:
