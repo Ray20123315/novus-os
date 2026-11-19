@@ -42,6 +42,16 @@ class SmokeTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             receive(wire, 1)
 
+    def test_rfb_desktopsize_requires_origin(self):
+        for x, y in ((1, 0), (0, 1)):
+            with self.subTest(x=x, y=y):
+                wire = Wire(b"\\0\\0\\0\\1" + struct.pack("!HHHHi", x, y, 2, 2, -223))
+                rfb = Rfb.__new__(Rfb)
+                rfb.sock, rfb.width, rfb.height = wire, 2, 2
+                rfb.rgb = bytearray(12)
+                with self.assertRaisesRegex(RuntimeError, "DesktopSize rectangle must start at origin"):
+                    rfb.frame()
+
     def test_png_round_trip_and_corruption(self):
         rgb = bytes(range(18))
         with tempfile.TemporaryDirectory() as work:
