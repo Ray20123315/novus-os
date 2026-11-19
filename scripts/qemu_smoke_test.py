@@ -69,7 +69,7 @@ class SmokeTests(unittest.TestCase):
             self.assertEqual(read_png(image), (1, 1, rgb))
             # Insert an ancillary chunk before IDAT, preserving valid CRCs.
             ihdr_end = 8 + 12 + 13
-            for kind in (b"tE1t", b"tE_t", b"\\x00EXt", b"tE\\xfft"):
+            for kind in (b"tE1t", b"tE_t", b"\x00EXt", b"tE\xfft"):
                 with self.subTest(kind=kind):
                     image.write_bytes(original[:ihdr_end] + chunk(kind, b"x") +
                                       original[ihdr_end:])
