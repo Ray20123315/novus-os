@@ -3,7 +3,7 @@
 # source change, then re-run the headless smoke test.
 set -euo pipefail
 export PATH="/home/dev/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin:/home/dev/.cargo/bin:${PATH}"
-cd /home/dev/novus-os/novus-os
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
 rm -f build/graphics_nd_font.o out/NOVUS.EFI out/novus-live.iso
 make iso
 echo "=== iso built ==="
