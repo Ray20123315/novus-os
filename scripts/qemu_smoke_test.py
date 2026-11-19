@@ -66,6 +66,15 @@ class SmokeTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             compare(changed, bytes(3), 2, 2, [(0, 0, 2, 2)], 8, 0)
 
+    def test_overlapping_regions_count_each_pixel_once(self):
+        actual = bytes([9, 0, 0, 0, 0, 0])
+        expected = bytes(6)
+        regions = [(0, 0, 2, 1), (1, 0, 1, 1)]
+        with self.assertRaisesRegex(RuntimeError, "1/2 pixels"):
+            compare(actual, expected, 2, 1, regions, 0, 0.4)
+        compare(actual, expected, 2, 1, regions, 0, 0.5)
+        compare(expected, expected, 2, 1, regions, 0, 0)
+
     def test_boot_assertions_reject_faults_and_missing_markers(self):
         check_log("[ND] selftest PASS", ("[ND] selftest PASS",))
         check_log("[SCHED] task nxprobe exited with code 0xFFFFFFFF")
