@@ -181,6 +181,8 @@ class Rfb:
         time.sleep(0.8)
 
     def key(self, keysym: int) -> None:
+        if not 0 <= keysym <= 0xffffffff:
+            raise ValueError("RFB keysym outside wire range")
         for down in (1, 0):
             self.sock.sendall(struct.pack("!BBHI", 4, down, 0, keysym))
             time.sleep(0.03)
