@@ -18,6 +18,10 @@ set -euo pipefail
 
 MEM="${1:-4G}"
 DISK="${2:-}"
+# Preserve caller-relative disk paths before changing to the repository root.
+if [[ -n "$DISK" && "$DISK" != /* ]]; then
+    DISK="$PWD/$DISK"
+fi
 
 cd "$(dirname "$0")/.."
 
