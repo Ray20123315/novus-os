@@ -15,7 +15,11 @@ print('%s: bps=%d spc=%d reserved=%d fats=%d fat_sectors=%d' %
 count = 0
 
 
-def walk(cluster, prefix):
+def walk(cluster, prefix, ancestors):
+    global count
+    if cluster in ancestors:
+        raise ValueError('directory cluster cycle at %s (cluster %d)' % (prefix, cluster))
+    ancestors = ancestors | {cluster}
     global count
     for nm, first, size, is_dir in fat.entries(cluster):
         name = nm[:8].decode('ascii', 'replace').rstrip()
@@ -24,8 +28,11 @@ def walk(cluster, prefix):
         print('  %s%s%s' % (prefix, full, '/' if is_dir else ''))
         count += 1
         if is_dir and first >= 2:
-            walk(first, prefix + full + '/')
+            walk(first, prefix + full + '/', ancestors)
 
 
-walk(0, '/')
+try:
+    walk(0, '/', frozenset())
+except ValueError as exc:
+    sys.exit(str(exc))
 print('  %d entries' % count)
