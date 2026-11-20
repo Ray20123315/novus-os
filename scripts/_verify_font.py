@@ -34,7 +34,8 @@ def analyze(path, label):
 
 
 image_font = analyze(os.path.join(BASE, 'novus.img'), 'novus.img')
-with open('graphics/nd_font_data.bin', 'rb') as fh:
+with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                       'graphics', 'nd_font_data.bin'), 'rb') as fh:
     ref = fh.read()
 print('=== graphics/nd_font_data.bin: %d bytes md5=%s ===' %
       (len(ref), hashlib.md5(ref).hexdigest()))
