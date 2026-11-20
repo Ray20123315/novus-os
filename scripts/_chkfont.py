@@ -10,7 +10,8 @@ path = sys.argv[1] if len(sys.argv) > 1 else 'out/novus.img'
 with open(path, 'rb') as fh:
     nv = NovusFS(fh.read())
 ino = nv.lookup('Novus/fonts/font.bin')
-assert ino, '/Novus/fonts/font.bin not found'
+if not ino:
+    raise ValueError('/Novus/fonts/font.bin not found')
 node = nv.inode(ino)
 print('font.bin inode=%d mode=%d size=%d blocks=%d' %
       (node['ino'], node['mode'], node['size'], node['blocks']))
