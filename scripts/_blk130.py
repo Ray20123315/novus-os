@@ -1,19 +1,26 @@
+#!/usr/bin/env python3
+"""Compare the inode-table block against a captured smoke-test sample."""
+import os
 import struct
-data = open('out/novus.img', 'rb').read()
-# block 130 == inode table block (itbl_start=130). inode 2 is at offset 128 in that block.
-bo = 130 * 4096
-print('file block130[0:16]:', data[bo:bo+16].hex())
-print('file block130[128:144] (inode2 word0/size):', data[bo+128:bo+144].hex())
-# smoke captured tmp-b130 = 48DBBF0F48DA29F2 BF0F48C8394CD829 (as big-endian-printed u64 pairs)
+import sys
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+IMAGE = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'out', 'novus.img')
+BLOCK_OFFSET = 130 * 4096
+
+with open(IMAGE, 'rb') as fh:
+    fh.seek(BLOCK_OFFSET)
+    data = fh.read(4096)
+if len(data) != 4096:
+    raise ValueError('NovusFS image is truncated before block 130 ends')
+
+print('file block130[0:16]:', data[:16].hex())
+print('file block130[128:144] (inode2 word0/size):', data[128:144].hex())
 print('smoke tmp-b130 p0=0x48DBBF0F48DA29F2 p1=0xBF0F48C8394CD829')
-# decode smoke p0 as LE u64
 sm0 = 0x48DBBF0F48DA29F2
 sm1 = 0xBF0F48C8394CD829
-import struct
 sb = struct.pack('<QQ', sm0, sm1)
 print('smoke tmp-b130 bytes LE:', sb.hex())
-# compare
-print('MATCH block130[0:16]?', data[bo:bo+16].hex() == sb.hex())
-# also dump first 3 inodes of file block130 as u64
+print('MATCH block130[0:16]?', data[:16] == sb)
 for i in range(0, 128, 8):
-    print('ino off', i, struct.unpack_from('<Q', data, bo+i)[0])
+    print('ino off', i, struct.unpack_from('<Q', data, i)[0])
