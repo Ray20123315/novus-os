@@ -28,6 +28,9 @@ def analyze(path, label):
           (ino, node['size'], node['blocks'], node['direct'], node['iblk'],
            node['diblk']))
     font = nv.read_file(FONT_PATH)
+    if font is None:
+        print('  MISSING /%s' % FONT_PATH)
+        return None
     print('  first16=%s md5=%s' %
           (font[:16].hex(), hashlib.md5(font).hexdigest()))
     return font
