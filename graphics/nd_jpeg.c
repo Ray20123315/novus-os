@@ -735,7 +735,7 @@ static void jp_convert(jp_dec_t *d, nd_surface_t *out) {
 int nd_jpeg_size(const UINT8 *data, UINT32 len, int *w, int *h) {
   UINT32 pos = 2;
 
-  if (data == 0 || len < 4 || data[0] != 0xFF || data[1] != 0xD8) {
+  if (data == 0 || len < 4 || data[0] != 0xFF || data[1] != 0xD8 || w == 0 || h == 0) {
     return -1;
   }
   while (pos + 4 <= len) {
@@ -755,8 +755,11 @@ int nd_jpeg_size(const UINT8 *data, UINT32 len, int *w, int *h) {
       return -1;
     }
     plen = jp_be16(&data[pos + 2]);
+    if (plen < 2u || (UINT32)plen > len - pos - 2u) {
+      return -1;
+    }
     if (m == 0xC0 || m == 0xC1 || m == 0xC2) {
-      if (pos + 9u > len) {
+      if (plen < 11u) {
         return -1;
       }
       *h = jp_be16(&data[pos + 5]);
