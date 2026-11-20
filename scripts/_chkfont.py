@@ -6,7 +6,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from novusimg import NovusFS
 
-path = sys.argv[1] if len(sys.argv) > 1 else 'out/novus.img'
+path = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'out', 'novus.img')
 with open(path, 'rb') as fh:
     nv = NovusFS(fh.read())
 ino = nv.lookup('Novus/fonts/font.bin')
