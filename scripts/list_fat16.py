@@ -20,7 +20,6 @@ def walk(cluster, prefix, ancestors):
     if cluster in ancestors:
         raise ValueError('directory cluster cycle at %s (cluster %d)' % (prefix, cluster))
     ancestors = ancestors | {cluster}
-    global count
     for nm, first, size, is_dir in fat.entries(cluster):
         name = nm[:8].decode('ascii', 'replace').rstrip()
         ext = nm[8:].decode('ascii', 'replace').rstrip()
