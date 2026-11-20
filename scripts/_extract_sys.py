@@ -13,7 +13,8 @@ OUT = 'out/sys_extracted.img'
 with open(ISO, 'rb') as fh:
     iso = IsoFS(fh.read())
 sysimg = iso.read_file('SYSTEM.IMG', 'primary')
-assert sysimg is not None, 'SYSTEM.IMG not found in the primary ISO tree'
+if sysimg is None:
+    raise ValueError('SYSTEM.IMG not found in the primary ISO tree')
 with open(OUT, 'wb') as fh:
     fh.write(sysimg)
 print('extracted SYSTEM.IMG size=%d md5=%s' %
@@ -21,6 +22,7 @@ print('extracted SYSTEM.IMG size=%d md5=%s' %
 
 nv = NovusFS(sysimg)
 font = nv.read_file('Novus/fonts/font.bin')
-assert font is not None, '/Novus/fonts/font.bin missing'
+if font is None:
+    raise ValueError('/Novus/fonts/font.bin missing')
 print('font.bin(path): size=%d md5=%s' %
       (len(font), hashlib.md5(font).hexdigest()))
