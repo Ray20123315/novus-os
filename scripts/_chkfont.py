@@ -17,4 +17,6 @@ print('font.bin inode=%d mode=%d size=%d blocks=%d' %
 print('direct=%s iblk=%d diblk=%d' %
       (node['direct'], node['iblk'], node['diblk']))
 font = nv.read_file('Novus/fonts/font.bin')
+if font is None:
+    raise ValueError('font payload unavailable: /Novus/fonts/font.bin')
 print('first data bytes: %s' % font[:16].hex())
