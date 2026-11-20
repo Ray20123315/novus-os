@@ -52,6 +52,8 @@ def extract(path, name):
         out += f.read(spc * bps)
         c = fat_next(c)
         guard += 1
+    if len(out) < size:
+        raise ValueError(f"truncated FAT16 file: expected {size} bytes, got {len(out)}")
     data = bytes(out[:size])
     return data
 
