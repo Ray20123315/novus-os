@@ -4,8 +4,14 @@ import struct, sys, hashlib
 def extract(path, name):
     f = open(path, "rb")
     bpb = f.read(512)
+    if len(bpb) < 24:
+        raise ValueError("truncated FAT16 boot sector")
     bps = struct.unpack_from("<H", bpb, 11)[0]
     spc = bpb[13]
+    if bps not in (512, 1024, 2048, 4096):
+        raise ValueError("invalid FAT16 bytes per sector")
+    if spc == 0 or spc > 128 or spc & (spc - 1):
+        raise ValueError("invalid FAT16 sectors per cluster")
     res = struct.unpack_from("<H", bpb, 14)[0]
     nfats = bpb[16]
     root_ent = struct.unpack_from("<H", bpb, 17)[0]
