@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Find embedded NovusFS images inside the ISO."""
 import hashlib
+import os
 import struct
 import sys
 
@@ -15,8 +16,9 @@ def r64(b, o):
     return struct.unpack_from('<Q', b, o)[0]
 
 
-iso_path = sys.argv[1] if len(sys.argv) > 1 else 'out/novus-live.iso'
-ref_path = sys.argv[2] if len(sys.argv) > 2 else 'out/novus.img'
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+iso_path = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'out', 'novus-live.iso')
+ref_path = sys.argv[2] if len(sys.argv) > 2 else os.path.join(ROOT, 'out', 'novus.img')
 with open(ref_path, 'rb') as fh:
     ref = fh.read()
 with open(iso_path, 'rb') as fh:
