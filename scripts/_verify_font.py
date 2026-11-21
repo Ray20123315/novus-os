@@ -7,7 +7,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from novusimg import NovusFS
 
-BASE = sys.argv[1] if len(sys.argv) > 1 else 'out'
+BASE = (sys.argv[1] if len(sys.argv) > 1 else
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'out'))
 FONT_PATH = 'Novus/fonts/font.bin'
 
 
