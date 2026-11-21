@@ -138,6 +138,8 @@ if iso is not None:
                'ISO mounts.json')
     check(iso_fs.lookup('EFI/BOOT/BOOTX64.EFI', 'primary') is not None,
           'ISO primary: UEFI boot file missing')
+    check(iso_fs.lookup('ESP.IMG', 'primary') is not None,
+          'ISO primary: ESP.IMG missing')
 
 print('check_rootfs: %d checks, %d errors' % (checks, len(errors)))
 for err in errors[:30]:
