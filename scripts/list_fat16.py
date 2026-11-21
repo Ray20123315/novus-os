@@ -6,7 +6,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from novusimg import FatFS
 
-path = sys.argv[1] if len(sys.argv) > 1 else 'out/esp.img'
+path = (sys.argv[1] if len(sys.argv) > 1 else
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'out', 'esp.img'))
 with open(path, 'rb') as fh:
     fat = FatFS(fh.read())
 print('%s: bps=%d spc=%d reserved=%d fats=%d fat_sectors=%d' %
