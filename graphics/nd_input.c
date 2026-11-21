@@ -212,6 +212,8 @@ static void ps2_flush(void) {
 void nd_input_init(void) {
   UINT8 cfg = 0;
   int cfg_valid = 0;
+  int keyboard_irq = 0;
+  int mouse_irq = 0;
   INT32 w = 1024;
   INT32 h = 768;
 
@@ -268,16 +270,28 @@ void nd_input_init(void) {
     (void)io_in8(PS2_DATA);
   }
   ps2_flush();
-  if (cfg_valid && irq_register(1u, 0u, ps2_irq, NULL, "ps2-keyboard") >= 0 &&
-      irq_register(12u, 0u, ps2_irq, NULL, "ps2-mouse") >= 0) {
+  /* Keep the usable PS/2 port when only one IRQ line is available.
+   * Controller IRQ-enable bits 0/1 and clock-disable bits 4/5 must agree
+   * with the handlers actually installed; otherwise an unhandled device
+   * can interrupt or a working keyboard can be disabled by a dead mouse. */
+  if (cfg_valid) {
+    keyboard_irq = irq_register(1u, 0u, ps2_irq, NULL, "ps2-keyboard") >= 0;
+    mouse_irq = irq_register(12u, 0u, ps2_irq, NULL, "ps2-mouse") >= 0;
+    if (!keyboard_irq) {
+      ps2_cmd(PS2_CMD_DISABLE_K);
+    }
+    if (!mouse_irq) {
+      ps2_cmd(PS2_CMD_DISABLE_M);
+    }
     ps2_cmd(PS2_CMD_WRITE_CFG);
-    ps2_write((UINT8)((cfg | 0x43u) & (UINT8)~0x30u));
-    kputs("[ND] PS/2 keyboard + mouse IRQ enabled (no hardware polling)\n");
-  } else {
-    (void)irq_unregister(1u, ps2_irq, NULL);
-    (void)irq_unregister(12u, ps2_irq, NULL);
-    kputs("[ND] WARN PS/2 IRQ unavailable: input disabled\n");
+    ps2_write((UINT8)((cfg & (UINT8)~0x33u) |
+                      (keyboard_irq ? 0x01u : 0x10u) |
+                      (mouse_irq ? 0x02u : 0x20u)));
   }
+  kputs(keyboard_irq ? "[ND] PS/2 keyboard IRQ enabled\n"
+                     : "[ND] WARN PS/2 keyboard IRQ unavailable\n");
+  kputs(mouse_irq ? "[ND] PS/2 mouse IRQ enabled\n"
+                  : "[ND] WARN PS/2 mouse IRQ unavailable\n");
   vm_mouse_init();
 }
 
