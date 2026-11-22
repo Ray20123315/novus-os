@@ -903,7 +903,13 @@ int sched_selftest(void) {
 UINT32 sched_exit_count(void) { return g_exit_count; }
 
 void sched_start(void) {
-  task_t *first = task_pick_next();
+  task_t *first;
+
+  /* The boot menu leaves IRQs enabled for keyboard input. Do not expose
+   * g_sched_started or a half-installed TSS/CR3 to the timer interrupt:
+   * the first user frame restores IF=1 via sched_enter()'s iretq. */
+  __asm__ volatile("cli" ::: "memory");
+  first = task_pick_next();
 
   if (first == NULL) {
     kputs("[SCHED] no task to run\n");
