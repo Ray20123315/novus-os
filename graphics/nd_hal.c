@@ -966,7 +966,9 @@ void nd_mirror_rect(nd_rect_t r) {
     nd_map_t      m = map_of(src, dst);
     INT32         x0, x1, y0, y1, x, y;
 
-    if (m.scale == 1000) {
+    /* Fast copy is only correct when source and mirror share an origin.
+     * A 1:1 image may still be centered on a wider or taller output. */
+    if (m.scale == 1000 && m.off_x == 0 && m.off_y == 0) {
       x0 = (r.x > 0) ? r.x : 0;
       y0 = (r.y > 0) ? r.y : 0;
       x1 = r.x + r.w;
