@@ -1,5 +1,11 @@
 # Changes
 
+## 多显示器镜像：修复 1:1 比例下的居中偏移
+
+- `graphics/nd_hal.c`：只有缩放为 1:1 **且偏移为零**时才使用同坐标的逐行快速拷贝；镜像画面需要水平或垂直居中时，改走已有的坐标映射分支，确保像素、局部损伤区域与鼠标指针对齐。
+- `scripts/nd_mirror_alignment_test.py`：新增宿主端 C 回归测试，覆盖同尺寸快速路径、水平/垂直留边、局部重绘、缩放镜像和 RGB/BGR 转换。
+- 验证：原实现 3/6 通过，修正后 6/6 通过；使用 AddressSanitizer、UndefinedBehaviorSanitizer 编译，Python `py_compile` 通过。未执行完整系统构建、QEMU 或实体多屏幕测试。
+
 ## QEMU 网卡全线打通（e1000 / e1000e / virtio-net / rtl8139）
 
 - 新增 `kernel/net_rtl8139.c`：I/O BAR 驱动，8 KiB 收环 + CBR/CAPR 握手、
